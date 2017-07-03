@@ -35,33 +35,39 @@ class Population:
     def __init__(self, dna_length, size,
                  mutation_rate, initial_position, target_position):
 
-        self.__population = [Agent(dna_length, position=initial_position)
-                             for _ in range(size)]
+        self.__agents = [Agent(dna_length, position=initial_position)
+                         for _ in range(size)]
+
+    def get_agents(self):
+        return self.__agents
+
 
 class GeneticAlgorithm:
 
-    def __init__(self, dna_length, population_size, n_generations=sys.maxint):
+    def __init__(self, dna_length, population_size, mutation_rate,
+                 initial_position, target_position, n_generations=sys.maxint):
 
         self.__population = Population(dna_length, population_size,
                                        mutation_rate, initial_position,
                                        target_position)
-
-        self.__dna_length = dna_length
-        self.__population_size = population_size
         self.__n_generations = n_generations
 
-    def run:
+    def run(self):
+        for x in range(1, n_generations):
+            for agent in self.__population.get_agents():
+                agent.print_dna()
 
-        for x in range(n_generations):
 
 if __name__ == "__main__":
 
     dna_length = 50
-    n_generations = 100
-    population_size = 50
+    n_generations = 10
+    population_size = 10
     mutation_rate = 0.01
     board_size = [40, 40]
     initial_position = [0, 0]
     target_position = [24, 25]
 
-
+    ga = GeneticAlgorithm(dna_length, population_size, mutation_rate,
+                          initial_position, target_position, n_generations)
+    ga.run()
