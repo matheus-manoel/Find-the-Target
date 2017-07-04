@@ -28,16 +28,18 @@ class Agent:
     def get_position(self):
         return self.__position
 
-    def walk(self):
-        for key in self.__dna.get_genes():
-            new_position = [self.__position[0] + DIRECTIONS[key][0],
-                            self.__position[1] + DIRECTIONS[key][1]]
+    def set_position(self, position):
+        self.__position = position
 
-            if (new_position[0] < BOARD_SIZE[0] and
-                new_position[1] < BOARD_SIZE[1] and
-                new_position[0] >= 0 and
-                new_position[1] >= 0):
-                self.__position = new_position
+    def walk(self, key):
+        new_position = [self.__position[0] + DIRECTIONS[key][0],
+                        self.__position[1] + DIRECTIONS[key][1]]
+
+        if (new_position[0] < BOARD_SIZE[0] and
+            new_position[1] < BOARD_SIZE[1] and
+            new_position[0] >= 0 and
+            new_position[1] >= 0):
+            self.__position = new_position
 
     def calculate_fitness(self, target_position):
         self.__fitness = math.hypot(target_position[0] - self.__position[0],
@@ -75,13 +77,14 @@ class Population:
     def get_agents(self):
         return self.__agents
 
-    def walk(self, board):
-        for agent in self.__agents:
-            agent.walk()
+    def walk(self, board, generation):
+        for i in range(self.__dna_length):
+            board.run(self.__agents, self.__target_position, generation)
+            for agent in self.__agents:
+                agent.walk(agent.get_dna().get_genes()[i])
             #print agent.get_dna().get_genes()
             #print agent.get_position()
-
-        board.run(self.__agents, self.__target_position)
+            board.run(self.__agents, self.__target_position, generation)
 
     def calculate_fitness(self):
         for agent in self.__agents:
@@ -96,6 +99,10 @@ class Population:
     def reproduce(self, mutation_rate):
         self._crossover()
         self._mutation(mutation_rate)
+
+    def reposition(self):
+        for agent in self.__agents:
+            agent.set_position(self.__initial_position)
 
     def _crossover(self):
         offspring = []
@@ -136,12 +143,12 @@ class GeneticAlgorithm:
         self.__sleep_time = sleep_time
 
     def run(self):
-        for x in range(n_generations):
-            self.__population.walk(self.__board)
-            time.sleep(self.__sleep_time)
+        for x in range(self.__n_generations):
+            self.__population.walk(self.__board, x)
             self.__population.calculate_fitness()
             self.__population.select(selection_rate)
             self.__population.reproduce(mutation_rate)
+            self.__population.reposition()
 
 class Board:
 
@@ -156,31 +163,33 @@ class Board:
             self.__matrix[agent.get_position()[0]][agent.get_position()[1]] = 'O'
 
 
-    def show(self):
+    def show(self, generation):
         for row in self.__matrix:
             print "\n"
             for col in row:
                 print col,
+        print "Generation %d" % (generation)
 
     def clear(self):
         self.__matrix = [["|" for _ in range(self.__size[0])] for _ in range(self.__size[1])]
 
-    def run(self, agent_positions, target_position):
+    def run(self, agents, target_position, generation):
+        time.sleep(0.1)
         os.system('cls' if os.name == 'nt' else 'clear')
         self.clear()
-        self.insert_objects(agent_positions, target_position)
-        self.show()
+        self.insert_objects(agents, target_position)
+        self.show(generation)
 
 
 if __name__ == "__main__":
 
     dna_length = 30
     n_generations = 50
-    population_size = 10
-    mutation_rate = 0.01
+    population_size = 20
+    mutation_rate = 0.05
     selection_rate = 0.2
-    initial_position = [0, 0]
-    target_position = [19, 19]
+    initial_position = [10, 10]
+    target_position = [19, 0]
     sleep_time = 1
 
     ga = GeneticAlgorithm(dna_length, population_size, mutation_rate,
